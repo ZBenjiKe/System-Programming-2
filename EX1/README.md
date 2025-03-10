@@ -1,5 +1,5 @@
 
-# Graph Operators
+# Graph Algorithms
 
 ## Overview
 
