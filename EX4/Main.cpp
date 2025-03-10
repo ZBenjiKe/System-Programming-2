@@ -1,45 +1,107 @@
-#include "Tree.hpp"
+/**
+ * Demo app for Ex4
+ */
+#include <iostream>
+#include <string>
 #include "Complex.hpp"
+#include "Tree.hpp"
+#include <QApplication>
+#include <QTimer>
+#include "TreeVisualizer.hpp"
 
-int main() {
-    // ariel::Tree<int> intTree;
-    // intTree.add_root(1);
-    // intTree.add_sub_node(1, 2);
-    // intTree.add_sub_node(1, 3);
-    // intTree.add_sub_node(2, 4);
-    // intTree.add_sub_node(2, 5);
+using namespace std;
+using namespace ariel;
 
-    // std::cout << "Pre-Order Traversal:\n";
-    // for (auto it = intTree.begin_pre_order(); it != intTree.end_pre_order(); ++it) {
-    //     std::cout << *it << " ";
-    // }
-    // std::cout << "\n";
+int main(int argc, char *argv[]) {
 
-    // std::cout << "In-Order Traversal:\n";
-    // for (auto it = intTree.begin_in_order(); it != intTree.end_in_order(); ++it) {
-    //     std::cout << *it << " ";
-    // }
-    // std::cout << "\n";
+    QApplication app(argc, argv);
 
-    // std::cout << "Post-Order Traversal:\n";
-    // for (auto it = intTree.begin_post_order(); it != intTree.end_post_order(); ++it) {
-    //     std::cout << *it << " ";
-    // }
-    // std::cout << "\n";
+    Node<double> root_node = Node<double>(1.1);
+    Tree<double> tree; // Binary tree that contains doubles.
+    tree.add_root(root_node);
+    cout << "Root added to tree with value " << tree.get_root()->get_key() << endl;
+    Node<double> n1 = Node<double>(1.2);
+    Node<double> n2 = Node<double>(1.3);
+    Node<double> n3 = Node<double>(1.4);
+    Node<double> n4 = Node<double>(1.5);
+    Node<double> n5 = Node<double>(1.6);
 
-    // ariel::Tree<ariel::Complex> complexTree;
-    // complexTree.add_root(ariel::Complex(1, 2));
-    // complexTree.add_sub_node(ariel::Complex(1, 2), ariel::Complex(3, 4));
-    // complexTree.add_sub_node(ariel::Complex(1, 2), ariel::Complex(5, 6));
+    tree.add_sub_node(root_node, n1);
+    tree.add_sub_node(root_node, n2); 
+    tree.add_sub_node(n1, n3);
+    tree.add_sub_node(n1, n4);
+    tree.add_sub_node(n2, n5);
+    cout << "Sub-nodes added to the tree" << endl;
+   
+    // The tree should look like:
+    /**
+     *       root = 1.1
+     *     /       \
+     *    1.2      1.3
+     *   /  \      /
+     *  1.4  1.5  1.6
+     */
 
-    // std::cout << "Complex Tree Pre-Order Traversal:\n";
-    // for (auto it = complexTree.begin_pre_order(); it != complexTree.end_pre_order(); ++it) {
-    //     std::cout << *it << " ";
-    // }
-    // std::cout << "\n";
+    TreeVisualizer tv;
+    tv.renderTree<double>(tree);
+    tv.show();
+    QTimer::singleShot(2500, [&]() {
+        app.exit(16);
+    });
+    app.exec();
 
-    // // Demonstrate GUI print (placeholder)
-    // complexTree.print_tree_gui();
+    for (auto node = tree.begin_pre_order(); node != tree.end_pre_order(); ++node) {
+        cout << node->get_key() << "; ";
+    } // prints: 1.1, 1.2, 1.4, 1.5, 1.3, 1.6
+    cout << endl;
 
-    return 0;
+    for (auto node = tree.begin_post_order(); node != tree.end_post_order(); ++node) {
+        cout << node->get_key() << "; ";
+    } // prints: 1.4, 1.5, 1.2, 1.6, 1.3, 1.1
+    cout << endl;
+
+    for (auto node = tree.begin_in_order(); node != tree.end_in_order(); ++node) {
+        cout << node->get_key() << "; ";
+    } // prints: 1.4, 1.2, 1.5, 1.1, 1.6, 1.3
+    cout << endl;
+
+    for (auto node = tree.begin_bfs(); node != tree.end_bfs(); ++node) {
+        cout << node->get_key() << "; ";
+    } // prints: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
+    cout << endl;
+
+    tree.erase_tree();
+
+    //cout << tree; // Should print the graph using GUI.
+    Tree<double,3> three_ary_tree; // 3-ary tree.
+    three_ary_tree.add_root(root_node);
+    three_ary_tree.add_sub_node(root_node, n1);
+    three_ary_tree.add_sub_node(root_node, n2);
+    three_ary_tree.add_sub_node(root_node, n3);
+    three_ary_tree.add_sub_node(n1, n4);
+    three_ary_tree.add_sub_node(n2, n5);
+
+    for (auto node = three_ary_tree.begin_bfs(); node != three_ary_tree.end_bfs(); ++node) {
+        cout << node->get_key() << "; ";
+    } // should print: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
+
+    cout << endl;
+
+    tv.renderTree<double,3>(three_ary_tree);
+    tv.show();
+    QTimer::singleShot(2500, [&]() {
+        app.exit(16);
+    });
+    app.exec();
+
+
+     // The tree should look like:
+    /**
+     *       root = 1.1
+     *     /      |     \
+     *    1.2    1.3    1.4
+     *   /        |
+     *  1.5      1.6
+     */
+    
 }

@@ -7,62 +7,75 @@
 #include <stack>
 #include <iostream>
 #include <algorithm>
+#include <QApplication>
 
 using namespace std;
 
 namespace ariel {
+    class TreeVisualizer;
 
-    template<typename T> class Tree {
+    template<typename T, int k = 2> class Tree {
     private:
-        shared_ptr<Node<T>> root;
-        int k;
+        Node<T> *root;
+
     public:
-        explicit Tree(const T& root_val, int num = 2) : k(num) {
-            root = make_shared<Node<T>>(root_val);
-        }
+        Tree(Node<T> *node = nullptr) : root(node) {}
+ 
         
-        shared_ptr<Node<T>> find_node(shared_ptr<Node<T>> current, const T& val) {
-            if (!current) {
-                return nullptr;
+        void add_root(Node<T> &node) {
+            if (!root) {
+                root = &node;
+            } else {
+                throw runtime_error("The tree already has a root");
             }
-            if (current->key == val) {
-                return current;
-            }
-            for (auto& child : current->children) {
-                auto found = find_node(child, val);
-                if (found) {
-                    return found;
-                }
-            }
-            return nullptr;
         }
-        
-        void add_sub_node(const T &parent_val, shared_ptr<Node<T>> child) {
-            auto parent_node = find_node(root, parent_val);
-            if (parent_node) {
-                if (parent_node->children.size() < k) {
-                    parent_node->add_child(child);
+
+        void add_sub_node(Node<T> &parent, Node<T> &child) {
+            if(root) {
+                if(parent.children.size() < k) {
+                    parent.add_child(&child);
                 } else {
-                    throw runtime_error("Maximum children reached");
+                    throw runtime_error("Maximum children reached");  
                 }
             } else {
-                throw runtime_error("Parent not found");
+                throw runtime_error("The tree is empty");
             }
         }
 
-        ~Tree() {
-            // Destructor
+        Node<T>* get_root() const {
+            if (root) {
+                return root;
+            } else {
+                throw runtime_error("The tree is empty");
+            }
         }
+
+        void erase_tree() {
+            clear_tree(root);
+            root = nullptr;
+        }
+
+        void clear_tree(Node<T> *root) {
+            if (root) {
+                for(Node<T> *child : root->children) {
+                    clear_tree(child);
+                }
+            }
+            root->children.clear();
+        }
+
+        // Destructor
+        ~Tree() {}
 
         // Pre-Order Iterator (DFS)
         class pre_order_iterator {
         private:
-            shared_ptr<Node<T>> current_node;
-            stack<shared_ptr<Node<T>>> node_stack;
+            Node<T> *current_node;
+            stack<Node<T> *> node_stack;
 
         public:
             // Constructor starts the iterator at the root
-            pre_order_iterator(shared_ptr<Node<T>> root = nullptr) {
+            pre_order_iterator(Node<T> *root = nullptr) {
                 if (root) {
                     node_stack.push(root);
                     current_node = root;
@@ -71,9 +84,9 @@ namespace ariel {
                 }
             }
 
-            // Dereference the iterator (return the value at the current node)
-            T& operator*() const {
-                return current_node->key;
+            // Dereference the iterator (return a pointer to the current node)
+            Node<T> *operator->() const {
+                return current_node;
             }
 
             // Move to the next node in the pre-order traversal
@@ -110,13 +123,13 @@ namespace ariel {
         // Post-Order Iterator (DFS)
         class post_order_iterator {
         private:
-            shared_ptr<Node<T>> current_node;
-            stack<shared_ptr<Node<T>>> node_stack;
-            stack<shared_ptr<Node<T>>> output_stack;
+            Node<T> *current_node;
+            stack<Node<T> *> node_stack;
+            stack<Node<T> *> output_stack;
 
         public:
             // Constructor starts the iterator at the root
-            post_order_iterator(shared_ptr<Node<T>> root = nullptr) {
+            post_order_iterator(Node<T> *root = nullptr) {
                 if (root) {
                     node_stack.push(root);
                     while (!node_stack.empty()) {
@@ -125,7 +138,7 @@ namespace ariel {
                         output_stack.push(current_node);
                     
                         // Push children to the stack in post order (so left-most is processed first)
-                        for (const auto& child : current_node->children) {
+                        for (auto& child : current_node->children) {
                             node_stack.push(child);
                         }
                     }
@@ -136,9 +149,9 @@ namespace ariel {
                 }
             }
 
-            // Dereference the iterator (return the value at the current node)
-            T& operator*() const {
-                return current_node->key;
+            // Dereference the iterator (return a pointer to the current node)
+            Node<T> *operator->() const {
+                return current_node;
             }
 
             // Move to the next node in the post-order traversal
@@ -166,12 +179,12 @@ namespace ariel {
         // In-Order Iterator (DFS) - Binary trees only
         class in_order_iterator {
         private:
-            shared_ptr<Node<T>> current_node;
-            stack<shared_ptr<Node<T>>> node_stack;
+            Node<T> *current_node;
+            stack<Node<T> *> node_stack;
 
         public:
             // Constructor starts the iterator at the root
-            in_order_iterator(shared_ptr<Node<T>> root = nullptr) {
+            in_order_iterator(Node<T> *root = nullptr) {
                 if (root) {
                     current_node = root;
                     while (current_node) {
@@ -188,9 +201,9 @@ namespace ariel {
                 }
             }
 
-            // Dereference the iterator (return the value at the current node)
-            T& operator*() const {
-                return current_node->key;
+            // Dereference the iterator (return a pointer to the current node)
+            Node<T> *operator->() const {
+                return current_node;
             }
 
             // Move to the next node in the post-order traversal
@@ -237,10 +250,11 @@ namespace ariel {
         // BFS Iterator
         class bfs_iterator {
         private:
-            shared_ptr<Node<T>> current_node;
-            queue<shared_ptr<Node<T>>> node_queue;
+            Node<T> *current_node;
+            queue<Node<T> *> node_queue;
+
         public:
-            bfs_iterator(shared_ptr<Node<T>> root = nullptr) {
+            bfs_iterator(Node<T> *root = nullptr) {
                 if (root) {
                     node_queue.push(root);
                     current_node = root;
@@ -249,13 +263,13 @@ namespace ariel {
                 }
             }
 
-            T& operator*() {
-                return current_node->key;
+            // Dereference the iterator (return a pointer to the current node)
+            Node<T> *operator->() const {
+                return current_node;
             }
 
             bfs_iterator& operator++() {
                 if (!node_queue.empty()) {
-                    current_node = node_queue.front();
                     node_queue.pop();
 
                     for (const auto& child : current_node->children) {
@@ -285,11 +299,11 @@ namespace ariel {
         // DFS Iterator
         class dfs_iterator {
         private:
-            shared_ptr<Node<T>> current_node;
-            stack<shared_ptr<Node<T>>> node_stack;
+            Node<T> *current_node;
+            stack<Node<T> *> node_stack;
 
         public:
-            dfs_iterator(shared_ptr<Node<T>> root = nullptr) {
+            dfs_iterator(Node<T> *root = nullptr) {
                 if (root) {
                     node_stack.push(root);
                     current_node = root;
@@ -298,8 +312,9 @@ namespace ariel {
                 }
             }
 
-            T& operator*() {
-                return current_node->key;
+            // Dereference the iterator (return a pointer to the current node)
+            Node<T> *operator->() const {
+                return current_node;
             }
 
             dfs_iterator& operator++() {
@@ -335,10 +350,10 @@ namespace ariel {
         // Heap Iterator
         class heap_iterator {
         private:
-            shared_ptr<Node<T>> current_node;
-            vector<shared_ptr<Node<T>>> heap_vector;
+            Node<T> *current_node;
+            vector<Node<T> *> heap_vector;
 
-            void add_all_nodes(shared_ptr<Node<T>> node) {
+            void add_all_nodes(Node<T> *node = nullptr) {
                 if (node) {
                     heap_vector.push(node);
                     for (const auto& child : node->children) {
@@ -348,7 +363,7 @@ namespace ariel {
             }
 
         public:
-            heap_iterator(shared_ptr<Node<T>> root = nullptr){
+            heap_iterator(Node<T> *root = nullptr){
                 if (k != 2) {
                     throw runtime_error("Tree is not binary");
                 }
@@ -359,7 +374,7 @@ namespace ariel {
                 }
             }
 
-            T& operator*() {
+            Node<T> &operator*() {
                 return heap_vector[0]->key;
             }
 
@@ -412,10 +427,14 @@ namespace ariel {
             return dfs_iterator(nullptr);
         }
 
-
-        void print_tree_gui() {
-            // GUI code to print the Tree...
-        }
+        // friend ostream& operator<<(ostream& out, Node<T> *root) {
+        //     TreeVisualizer tv;
+        //     tv.renderTree<T>(this);
+        //     tv.show();
+        //     QApplication::instance()->exec();
+        //     QApplication::instance()->exit();
+        //     return out;
+        // }
     };
 }
 

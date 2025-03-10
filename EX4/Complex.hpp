@@ -25,10 +25,6 @@ namespace ariel {
             return Complex((real * other.real) - (imag * other.imag), (real * other.imag) + (imag * other.real));
         }
 
-        // Complex operator/(const Complex &other) const {
-        //     return Complex((real * other.real) - (imag * other.imag), (real * other.imag) + (imag * other.real))
-        // }
-
         friend bool operator==(const Complex &c1, const Complex &c2) {
             return ((c1.real == c2.real) && (c1.imag == c2.imag));
         }

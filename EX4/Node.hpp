@@ -9,18 +9,30 @@ using namespace std;
 
 namespace ariel {
 
-    template<typename T> class Node : public enable_shared_from_this<Node<T>> {
-    public:
+    template<typename T> class Node {
+    private:
         T key;
-        vector<shared_ptr<Node<T>>> children;
+    public:        
+        vector<Node<T> *> children;
+
+        Node(T value) : key(value) {}
         
-        explicit Node(const T& value) : key(value) {}
-        
-        void add_child(shared_ptr<Node<T>> child) {
+        ~Node() {
+            children.clear();
+        }
+
+        void add_child(Node<T> *child) {
             children.push_back(child);
         }
-    };
 
+        T get_key() const {
+            return key;
+        } 
+
+        vector<Node<T> *> &get_children() const {
+            return children;
+        }
+    };
 }
 
 #endif // NODE_HPP
